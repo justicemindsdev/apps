@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Bookmaking App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .dark {
+            --bg-primary: #181818;
+            --text-primary: #ffffff;
+            --accent-color: #7170FF;
+            --border-color: #333333;
+            --card-bg: #222222;
+            --input-bg: #2a2a2a;
+            --secondary-bg: #2d2d2d;
+        }
+        
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #333333;
+            --accent-color: #5D5CDE;
+            --border-color: #e5e5e5;
+            --card-bg: #f9f9f9;
+            --input-bg: #f0f0f0;
+            --secondary-bg: #f0f0f0;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        
+        input, textarea, select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        button.primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .sidebar {
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+        
+        .content-area {
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+        
+        .image-placeholder {
+            border: 2px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+        }
+        
+        #book-preview {
+            min-height: 500px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        /* Editor content styling */
+        .editor-content h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .editor-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .editor-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .editor-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .editor-content ul, .editor-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content ul {
+            list-style-type: disc;
+        }
+        
+        .editor-content ol {
+            list-style-type: decimal;
+        }
+        
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+            margin-left: 0;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content code {
+            font-family: monospace;
+            background-color: var(--input-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        
+        .editor-content pre {
+            background-color: var(--input-bg);
+            padding: 1rem;
+            border-radius: 0.25rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
+        }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Table of contents styling */
+        .toc-item {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        
+        .toc-item:hover {
+            background-color: var(--input-bg);
+        }
+        
+        .toc-item.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        /* Image gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: transform 0.2s;
+        }
+        
+        .gallery-image:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Format options */
+        .format-option {
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: var(--secondary-bg);
+            transition: all 0.2s;
+        }
+        
+        .format-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .format-option.selected {
+            border: 2px solid var(--accent-color);
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+        
+        /* File drop area */
+        .file-drop-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .file-drop-area:hover, .file-drop-area.active {
+            border-color: var(--accent-color);
+            background-color: rgba(93, 92, 222, 0.05);
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+        
+        /* Quote highlighting */
+        .quote-highlight {
+            background-color: rgba(93, 92, 222, 0.1);
+            border-left: 3px solid var(--accent-color);
+            padding: 0.5rem 1rem;
+            margin: 1rem 0;
+        }
+        
+        /* Action buttons */
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Expert Bookmaking App</h1>
+            <div class="flex items-center space-x-4">
+                <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-opacity-20 hover:bg-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <div class="sidebar w-full md:w-1/4 p-4 card rounded-lg mb-4 md:mb-0 md:mr-4">
+            <h2 class="text-xl font-bold mb-4">Book Structure</h2>
+            
+            <!-- Book Info -->
+            <div class="mb-6">
+                <label class="block mb-2">Book Title</label>
+                <input type="text" id="book-title" class="w-full px-3 py-2 rounded" placeholder="Enter book title">
+                
+                <label class="block mt-4 mb-2">Author</label>
+                <input type="text" id="book-author" class="w-full px-3 py-2 rounded" placeholder="Enter author name">
+                
+                <label class="block mt-4 mb-2">Description</label>
+                <textarea id="book-description" class="w-full px-3 py-2 rounded" rows="3" placeholder="Brief description of your book"></textarea>
+            </div>
+            
+            <!-- File Upload -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2">Source Material</h3>
+                <div id="file-drop-area" class="file-drop-area">
+                    <div class="mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-500">Drag & drop files here or click to browse</p>
+                    <input type="file" id="file-upload" class="hidden" accept=".txt,.pdf,.docx,.md">
+                </div>
+                <div id="file-info" class="mt-2 text-sm hidden"></div>
+                <div id="progress-container" class="progress-container hidden">
+                    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- Output Format -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2">Output Format</h3>
+                <div class="grid grid-cols-1 gap-3 mt-2">
+                    <div class="format-option selected" data-format="assessment">
+                        <h4 class="font-medium">Professional Assessment</h4>
+                        <p class="text-sm text-gray-500">Analyze quotes and performance against established frameworks</p>
+                    </div>
+                    <div class="format-option" data-format="whitepaper">
+                        <h4 class="font-medium">White Paper</h4>
+                        <p class="text-sm text-gray-500">Formal, research-based document with technical analysis</p>
+                    </div>
+                    <div class="format-option" data-format="narrative">
+                        <h4 class="font-medium">Narrative Book</h4>
+                        <p class="text-sm text-gray-500">Storytelling format documenting a personal journey</p>
+                    </div>
+                    <div class="format-option" data-format="custom">
+                        <h4 class="font-medium">Custom Format</h4>
+                        <p class="text-sm text-gray-500">Define your own output style with a prompt</p>
+                    </div>
+                </div>
+                <textarea id="custom-format-prompt" class="w-full px-3 py-2 rounded mt-3 hidden" rows="3" placeholder="Describe the custom format you want (e.g., 'Format as a legal brief with executive summary')"></textarea>
+            </div>
+            
+            <!-- AI Model Selection -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2">AI Assistant</h3>
+                <select id="ai-model" class="w-full px-3 py-2 rounded">
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="openai/chatgpt-4o-latest">GPT-4o</option>
+                    <option value="openai/o1-preview-2024-09-12">OpenAI o1</option>
+                    <option value="openai/o1-mini">OpenAI o1-mini</option>
+                    <option value="x-ai/grok-beta">Grok Beta</option>
+                </select>
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" id="smart-model-selection" class="mr-2" checked>
+                    <label for="smart-model-selection" class="text-sm">Smart model selection (saves tokens)</label>
+                </div>
+                <div class="mt-4">
+                    <label class="block mb-2">API Key</label>
+                    <input type="password" id="api-key" class="w-full px-3 py-2 rounded" 
+                        value="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" 
+                        placeholder="Enter OpenRouter API Key">
+                </div>
+            </div>
+            
+            <!-- Process & Export -->
+            <div>
+                <button id="process-content" class="w-full py-2 px-4 rounded primary mb-2 flex items-center justify-center">
+                    <span>Process Content</span>
+                    <span id="process-loading" class="ml-2 hidden">
+                        <div class="loading-indicator"></div>
+                    </span>
+                </button>
+                <button id="export-pdf" class="w-full py-2 px-4 rounded secondary mb-2">Export as PDF</button>
+                <button id="export-docx" class="w-full py-2 px-4 rounded secondary">Export as DOCX</button>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="content-area w-full md:w-3/4 flex flex-col">
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-200 flex">
+                <button id="tab-content" class="py-2 px-4 border-b-2 border-accent-color text-accent-color font-medium">Content</button>
+                <button id="tab-preview" class="py-2 px-4 text-gray-500 font-medium">Preview</button>
+                <button id="tab-settings" class="py-2 px-4 text-gray-500 font-medium">Advanced Settings</button>
+            </div>
+            
+            <!-- Content Tab -->
+            <div id="content-panel" class="panel active">
+                <div class="card rounded-lg p-4 mb-4">
+                    <div id="content-status" class="mb-4 p-3 bg-blue-50 text-blue-700 rounded hidden">
+                        <p>Please upload content or start writing to begin.</p>
+                    </div>
+                    
+                    <textarea id="content-editor" class="w-full h-96 px-3 py-2 rounded font-mono" placeholder="Start writing your content here, or upload a file from the sidebar..."></textarea>
+                    
+                    <div class="flex justify-end mt-4">
+                        <button id="add-chapter-btn" class="text-sm px-3 py-1 rounded secondary">+ Add Chapter</button>
+                    </div>
+                </div>
+                
+                <!-- Chapters List -->
+                <div class="card rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Chapters</h3>
+                    <div id="chapters-list" class="space-y-2">
+                        <!-- Chapters will be added here -->
+                        <div class="p-2 bg-gray-100 rounded dark:bg-gray-800 flex justify-between items-center">
+                            <span>Introduction</span>
+                            <div>
+                                <button class="text-sm px-2 py-1 text-blue-500">Edit</button>
+                                <button class="text-sm px-2 py-1 text-red-500">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Tab -->
+            <div id="preview-panel" class="panel hidden">
+                <div class="card rounded-lg p-6">
+                    <div id="book-preview" class="editor-content">
+                        <!-- Preview content will appear here -->
+                        <div class="flex items-center justify-center h-64 text-gray-400">
+                            <p>Process your content to see a preview</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings-panel" class="panel hidden">
+                <div class="card rounded-lg p-4 mb-4">
+                    <h3 class="text-lg font-medium mb-4">Chunking Settings</h3>
+                    <div class="mb-4">
+                        <label class="block mb-2">Maximum Chunk Size (characters)</label>
+                        <input type="number" id="chunk-size" class="w-full px-3 py-2 rounded" value="4000">
+                        <p class="text-sm text-gray-500 mt-1">Larger chunks provide better context but may exceed model limits</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2">Chunk Overlap (characters)</label>
+                        <input type="number" id="chunk-overlap" class="w-full px-3 py-2 rounded" value="200">
+                        <p class="text-sm text-gray-500 mt-1">Amount of text overlap between chunks to maintain context</p>
+                    </div>
+                </div>
+                
+                <div class="card rounded-lg p-4 mb-4">
+                    <h3 class="text-lg font-medium mb-4">Output Settings</h3>
+                    <div class="mb-4">
+                        <label class="block mb-2">Analysis Depth</label>
+                        <select id="analysis-depth" class="w-full px-3 py-2 rounded">
+                            <option value="basic">Basic</option>
+                            <option value="standard" selected>Standard</option>
+                            <option value="deep">Deep</option>
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">Deeper analysis produces more thorough results but uses more tokens</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2">Citation Style</label>
+                        <select id="citation-style" class="w-full px-3 py-2 rounded">
+                            <option value="apa">APA</option>
+                            <option value="mla">MLA</option>
+                            <option value="chicago">Chicago</option>
+                            <option value="harvard">Harvard</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2">Target Word Count</label>
+                        <input type="number" id="target-word-count" class="w-full px-3 py-2 rounded" value="5000">
+                        <p class="text-sm text-gray-500 mt-1">Approximate length of the final document</p>
+                    </div>
+                </div>
+                
+                <div class="card rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Advanced AI Settings</h3>
+                    <div class="mb-4">
+                        <label class="block mb-2">Temperature</label>
+                        <input type="range" id="temperature" class="w-full" min="0" max="1" step="0.1" value="0.7">
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>More Precise</span>
+                            <span>More Creative</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2">Max Tokens Per Response</label>
+                        <input type="number" id="max-tokens" class="w-full px-3 py-2 rounded" value="4000">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for dark mode preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Dark mode toggle
+            document.getElementById('dark-mode-toggle').addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+            });
+            
+            // Dark mode media query listener
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+            
+            // Tab switching
+            const tabs = ['content', 'preview', 'settings'];
+            tabs.forEach(tab => {
+                document.getElementById(`tab-${tab}`).addEventListener('click', function() {
+                    // Hide all panels
+                    document.querySelectorAll('.panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                    
+                    // Show the selected panel
+                    document.getElementById(`${tab}-panel`).classList.remove('hidden');
+                    
+                    // Update tab styles
+                    tabs.forEach(t => {
+                        const tabEl = document.getElementById(`tab-${t}`);
+                        if (t === tab) {
+                            tabEl.classList.add('border-b-2', 'border-accent-color', 'text-accent-color');
+                            tabEl.classList.remove('text-gray-500');
+                        } else {
+                            tabEl.classList.remove('border-b-2', 'border-accent-color', 'text-accent-color');
+                            tabEl.classList.add('text-gray-500');
+                        }
+                    });
+                    
+                    // Special behavior for preview tab
+                    if (tab === 'preview') {
+                        updatePreview();
+                    }
+                });
+            });
+            
+            // Book data structure
+            let book = {
+                title: '',
+                author: '',
+                description: '',
+                chapters: [],
+                content: '',
+                processedContent: '',
+                sourceFile: null,
+                format: 'assessment',
+                customPrompt: '',
+                settings: {
+                    chunkSize: 4000,
+                    chunkOverlap: 200,
+                    analysisDepth: 'standard',
+                    citationStyle: 'apa',
+                    targetWordCount: 5000,
+                    temperature: 0.7,
+                    maxTokens: 4000
+                }
+            };
+            
+            // Format options
+            document.querySelectorAll('.format-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update selected state
+                    document.querySelectorAll('.format-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    // Update book format
+                    book.format = this.dataset.format;
+                    
+                    // Show/hide custom prompt field
+                    if (book.format === 'custom') {
+                        document.getElementById('custom-format-prompt').classList.remove('hidden');
+                    } else {
+                        document.getElementById('custom-format-prompt').classList.add('hidden');
+                    }
+                });
+            });
+            
+            // Custom format prompt
+            document.getElementById('custom-format-prompt').addEventListener('input', function() {
+                book.customPrompt = this.value;
+            });
+            
+            // File drop area
+            const fileDropArea = document.getElementById('file-drop-area');
+            const fileUpload = document.getElementById('file-upload');
+            const fileInfo = document.getElementById('file-info');
+            
+            fileDropArea.addEventListener('click', () => {
+                fileUpload.click();
+            });
+            
+            fileDropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileDropArea.classList.add('active');
+            });
+            
+            fileDropArea.addEventListener('dragleave', () => {
+                fileDropArea.classList.remove('active');
+            });
+            
+            fileDropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileDropArea.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileUpload.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+            
+            function handleFileUpload(file) {
+                // Update file info display
+                fileInfo.textContent = `File: ${file.name} (${formatFileSize(file.size)})`;
+                fileInfo.classList.remove('hidden');
+                
+                // Store file reference
+                book.sourceFile = file;
+                
+                // Read file content
+                const reader = new FileReader();
+                
+                reader.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const progressContainer = document.getElementById('progress-container');
+                        const progressBar = document.getElementById('progress-bar');
+                        
+                        progressContainer.classList.remove('hidden');
+                        const percentComplete = (event.loaded / event.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                    }
+                };
+                
+                reader.onload = (event) => {
+                    // Get file content
+                    const content = event.target.result;
+                    
+                    // Update content editor
+                    document.getElementById('content-editor').value = content;
+                    book.content = content;
+                    
+                    // Hide progress bar after a delay
+                    setTimeout(() => {
+                        document.getElementById('progress-container').classList.add('hidden');
+                    }, 1000);
+                    
+                    // Update content status
+                    updateContentStatus();
+                    
+                    // Suggest title based on file name
+                    if (!document.getElementById('book-title').value) {
+                        const titleSuggestion = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+                        document.getElementById('book-title').value = titleSuggestion;
+                        book.title = titleSuggestion;
+                    }
+                };
+                
+                reader.onerror = () => {
+                    fileInfo.textContent = 'Error reading file';
+                    fileInfo.classList.add('text-red-500');
+                };
+                
+                reader.readAsText(file);
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' bytes';
+                else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                else return (bytes / 1048576).toFixed(1) + ' MB';
+            }
+            
+            function updateContentStatus() {
+                const contentStatus = document.getElementById('content-status');
+                const contentEditor = document.getElementById('content-editor');
+                
+                if (contentEditor.value.trim() === '') {
+                    contentStatus.classList.remove('hidden');
+                    contentStatus.innerHTML = '<p>Please upload content or start writing to begin.</p>';
+                } else {
+                    const wordCount = contentEditor.value.trim().split(/\s+/).length;
+                    contentStatus.classList.remove('hidden');
+                    contentStatus.innerHTML = `<p>Content loaded. Approximately ${wordCount} words.</p>`;
+                }
+            }
+            
+            // Add chapter button
+            document.getElementById('add-chapter-btn').addEventListener('click', function() {
+                const content = document.getElementById('content-editor').value.trim();
+                
+                if (content === '') {
+                    alert('Please add some content before creating a chapter.');
+                    return;
+                }
+                
+                // Create new chapter
+                const chapterTitle = prompt('Enter chapter title:', `Chapter ${book.chapters.length + 1}`);
+                
+                if (chapterTitle) {
+                    book.chapters.push({
+                        id: Date.now(),
+                        title: chapterTitle,
+                        content: content
+                    });
+                    
+                    // Clear editor
+                    document.getElementById('content-editor').value = '';
+                    
+                    // Update content status
+                    updateContentStatus();
+                    
+                    // Update chapters list
+                    updateChaptersList();
+                }
+            });
+            
+            function updateChaptersList() {
+                const chaptersList = document.getElementById('chapters-list');
+                chaptersList.innerHTML = '';
+                
+                book.chapters.forEach((chapter, index) => {
+                    const chapterElement = document.createElement('div');
+                    chapterElement.className = 'p-2 bg-gray-100 rounded dark:bg-gray-800 flex justify-between items-center';
+                    
+                    chapterElement.innerHTML = `
+                        <span>${chapter.title}</span>
+                        <div>
+                            <button class="edit-chapter text-sm px-2 py-1 text-blue-500" data-index="${index}">Edit</button>
+                            <button class="delete-chapter text-sm px-2 py-1 text-red-500" data-index="${index}">Delete</button>
+                        </div>
+                    `;
+                    
+                    chaptersList.appendChild(chapterElement);
+                });
+                
+                // Add event listeners
+                document.querySelectorAll('.edit-chapter').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        const chapter = book.chapters[index];
+                        
+                        document.getElementById('content-editor').value = chapter.content;
+                        
+                        // Confirm edit
+                        if (confirm(`This will replace the current editor content with "${chapter.title}". Continue?`)) {
+                            // Remove chapter from list
+                            book.chapters.splice(index, 1);
+                            updateChaptersList();
+                            updateContentStatus();
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.delete-chapter').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        const chapter = book.chapters[index];
+                        
+                        if (confirm(`Are you sure you want to delete "${chapter.title}"?`)) {
+                            book.chapters.splice(index, 1);
+                            updateChaptersList();
+                        }
+                    });
+                });
+            }
+            
+            // Book info change event listeners
+            document.getElementById('book-title').addEventListener('input', function() {
+                book.title = this.value;
+            });
+            
+            document.getElementById('book-author').addEventListener('input', function() {
+                book.author = this.value;
+            });
+            
+            document.getElementById('book-description').addEventListener('input', function() {
+                book.description = this.value;
+            });
+            
+            // Content editor change event
+            document.getElementById('content-editor').addEventListener('input', function() {
+                book.content = this.value;
+                updateContentStatus();
+            });
+            
+            // Advanced settings events
+            document.getElementById('chunk-size').addEventListener('change', function() {
+                book.settings.chunkSize = parseInt(this.value);
+            });
+            
+            document.getElementById('chunk-overlap').addEventListener('change', function() {
+                book.settings.chunkOverlap = parseInt(this.value);
+            });
+            
+            document.getElementById('analysis-depth').addEventListener('change', function() {
+                book.settings.analysisDepth = this.value;
+            });
+            
+            document.getElementById('citation-style').addEventListener('change', function() {
+                book.settings.citationStyle = this.value;
+            });
+            
+            document.getElementById('target-word-count').addEventListener('change', function() {
+                book.settings.targetWordCount = parseInt(this.value);
+            });
+            
+            document.getElementById('temperature').addEventListener('input', function() {
+                book.settings.temperature = parseFloat(this.value);
+            });
+            
+            document.getElementById('max-tokens').addEventListener('change', function() {
+                book.settings.maxTokens = parseInt(this.value);
+            });
+            
+            // Chunking function to handle large content
+            function chunkContent(content, maxChunkSize = 4000, overlap = 200) {
+                if (content.length <= maxChunkSize) {
+                    return [content];
+                }
+                
+                const chunks = [];
+                let pos = 0;
+                
+                while (pos < content.length) {
+                    let endPos = Math.min(pos + maxChunkSize, content.length);
+                    
+                    // Try to find paragraph break for natural chunk boundaries
+                    if (endPos < content.length) {
+                        // Look back from current end position to find a paragraph break
+                        const paragraphBreak = content.lastIndexOf('\n\n', endPos);
+                        
+                        // If found and not too far back, use it
+                        if (paragraphBreak > pos && paragraphBreak > endPos - 500) {
+                            endPos = paragraphBreak + 2; // Include the paragraph break
+                        } else {
+                            // Otherwise try to find a sentence break
+                            const sentenceBreak = content.lastIndexOf('. ', endPos);
+                            if (sentenceBreak > pos && sentenceBreak > endPos - 200) {
+                                endPos = sentenceBreak + 1; // Include the period
+                            }
+                        }
+                    }
+                    
+                    // Extract chunk
+                    chunks.push(content.substring(pos, endPos));
+                    
+                    // Move position, accounting for overlap
+                    pos = Math.max(pos, endPos - overlap);
+                }
+                
+                return chunks;
+            }
+            
+            // Choose appropriate AI model based on task complexity
+            function selectAIModel(task, text) {
+                const smartModelSelection = document.getElementById('smart-model-selection').checked;
+                const selectedModel = document.getElementById('ai-model').value;
+                
+                if (!smartModelSelection) {
+                    return selectedModel;
+                }
+                
+                // Determine task complexity
+                const wordCount = text.split(/\s+/).length;
+                const complexity = book.settings.analysisDepth;
+                
+                // Simple tasks with short text can use lighter models
+                if (wordCount < 1000 && complexity === 'basic') {
+                    return 'openai/o1-mini';
+                }
+                
+                // Medium complexity tasks
+                if (wordCount < 3000 && complexity !== 'deep') {
+                    return 'anthropic/claude-instant-1.1';
+                }
+                
+                // Default to selected model for complex tasks
+                return selectedModel;
+            }
+            
+            // Process content button
+            document.getElementById('process-content').addEventListener('click', async function() {
+                // Update book content from editor
+                book.content = document.getElementById('content-editor').value;
+                
+                // Check if there's content to process
+                if (book.content.trim() === '' && book.chapters.length === 0) {
+                    alert('Please add some content before processing.');
+                    return;
+                }
+                
+                // Combine chapter content if any
+                if (book.chapters.length > 0) {
+                    book.content = book.chapters.map(chapter => 
+                        `# ${chapter.title}\n\n${chapter.content}`
+                    ).join('\n\n');
+                }
+                
+                // Show loading state
+                document.getElementById('process-loading').classList.remove('hidden');
+                document.getElementById('process-content').disabled = true;
+                
+                try {
+                    // Chunk content
+                    const chunks = chunkContent(
+                        book.content, 
+                        book.settings.chunkSize, 
+                        book.settings.chunkOverlap
+                    );
+                    
+                    // Prepare prompt based on format
+                    let formatPrompt = '';
+                    switch (book.format) {
+                        case 'assessment':
+                            formatPrompt = `Create a professional assessment framework that analyzes key quotes, statements, and behaviors from the provided content. 
+                            Evaluate them against established professional and legal frameworks and practices.
+                            Focus on identifying strengths, areas for improvement, and actionable insights. 
+                            Use ${book.settings.citationStyle.toUpperCase()} citations when referencing external sources. 
+                            Structure should include an executive summary, methodology, detailed analysis sections, and conclusions.`;
+                            break;
+                        case 'whitepaper':
+                            formatPrompt = `Create a formal white paper based on the provided content.
+                            Include an executive summary, introduction, background/context, methodology, detailed analysis, findings, recommendations, and conclusion.
+                            Use a professional, research-based tone with ${book.settings.citationStyle.toUpperCase()} citations.
+                            Highlight key insights and implications for the field.`;
+                            break;
+                        case 'narrative':
+                            formatPrompt = `Transform the provided content into a narrative book that tells a compelling story.
+                            Focus on character development, plot progression, and thematic elements.
+                            Use storytelling techniques to engage readers while maintaining the core facts and insights from the original content.
+                            Structure the narrative with chapters, scene transitions, and a cohesive narrative arc.`;
+                            break;
+                        case 'custom':
+                            formatPrompt = book.customPrompt;
+                            break;
+                    }
+                    
+                    // Add book metadata to prompt
+                    const metadataPrompt = `
+                    Title: ${book.title || "Untitled"}
+                    Author: ${book.author || "Anonymous"}
+                    Description: ${book.description || "No description provided"}
+                    
+                    Target word count: Approximately ${book.settings.targetWordCount} words
+                    Analysis depth: ${book.settings.analysisDepth} (${book.settings.analysisDepth === 'basic' ? 'focus on essential insights' : book.settings.analysisDepth === 'standard' ? 'balanced analysis' : 'comprehensive deep analysis'})
+                    Citation style: ${book.settings.citationStyle.toUpperCase()}
+                    `;
+                    
+                    // Process each chunk and combine results
+                    let processedContent = '';
+                    let chunkPrompts = [];
+                    
+                    // Prepare prompts for all chunks
+                    for (let i = 0; i < chunks.length; i++) {
+                        const chunk = chunks[i];
+                        
+                        let chunkPrompt = `${formatPrompt}\n\n${metadataPrompt}\n\n`;
+                        
+                        if (chunks.length > 1) {
+                            chunkPrompt += `This is part ${i+1} of ${chunks.length} of the content to be processed. `;
+                            
+                            if (i === 0) {
+                                chunkPrompt += `Begin the document with appropriate front matter and introduction. `;
+                            } else if (i === chunks.length - 1) {
+                                chunkPrompt += `This is the final part, so include conclusions and any end matter. `;
+                            } else {
+                                chunkPrompt += `Continue the document seamlessly from the previous part. `;
+                            }
+                            
+                            chunkPrompt += `Ensure this section integrates cohesively with the other parts.\n\n`;
+                        }
+                        
+                        chunkPrompt += `CONTENT TO PROCESS:\n\n${chunk}`;
+                        chunkPrompts.push(chunkPrompt);
+                    }
+                    
+                    // Select appropriate model
+                    const model = selectAIModel(book.format, book.content);
+                    
+                    // Process all chunks
+                    for (let i = 0; i < chunkPrompts.length; i++) {
+                        // Update progress indicator
+                        const progressContainer = document.getElementById('progress-container');
+                        const progressBar = document.getElementById('progress-bar');
+                        
+                        progressContainer.classList.remove('hidden');
+                        const percentComplete = ((i + 1) / chunkPrompts.length) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                        
+                        // Process current chunk
+                        const response = await callAI(chunkPrompts[i], model);
+                        
+                        // Append to processed content
+                        processedContent += response + "\n\n";
+                        
+                        // If not the last chunk, add a short delay to avoid rate limits
+                        if (i < chunkPrompts.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    }
+                    
+                    // Store processed content
+                    book.processedContent = processedContent;
+                    
+                    // Update preview
+                    updatePreview();
+                    
+                    // Show preview tab
+                    document.getElementById('tab-preview').click();
+                    
+                } catch (error) {
+                    alert('Error processing content: ' + error.message);
+                    console.error('Processing error:', error);
+                } finally {
+                    // Reset loading state
+                    document.getElementById('process-loading').classList.add('hidden');
+                    document.getElementById('process-content').disabled = false;
+                    document.getElementById('progress-container').classList.add('hidden');
+                }
+            });
+            
+            // Function to call AI API (simulated for demo)
+            async function callAI(prompt, model) {
+                // In a real app, this would use fetch to call an API
+                console.log(`Processing with model: ${model}`);
+                
+                // API Key
+                const apiKey = document.getElementById('api-key').value;
+                
+                if (!apiKey) {
+                    throw new Error('Please enter an API key');
+                }
+                
+                // For demo, simulate API response with delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Generate a simulated response based on prompt length and content
+                // In a real app, this would be the actual API call
+                let response = '';
+                
+                // Extract first few words to use in the response
+                const firstWords = prompt.split(' ').slice(0, 10).join(' ');
+                
+                if (prompt.includes('assessment')) {
+                    response = generateSimulatedAssessment(firstWords);
+                } else if (prompt.includes('whitepaper')) {
+                    response = generateSimulatedWhitepaper(firstWords);
+                } else if (prompt.includes('narrative')) {
+                    response = generateSimulatedNarrative(firstWords);
+                } else {
+                    response = generateSimulatedResponse(firstWords);
+                }
+                
+                return response;
+            }
+            
+            // Simulated response generation functions for demo
+            function generateSimulatedAssessment(contextHint) {
+                return `# Professional Assessment Framework
+
+## Executive Summary
+
+This assessment analyzes key communications, behaviors, and decision-making patterns evident in the transcript between Ben Mak and Rapheal. The conversation reveals important insights about cross-cultural understanding, professional identity, immigration challenges, and decision-making under institutional constraints. This framework evaluates these elements against established standards of professional conduct, cultural competence, and legal frameworks.
+
+## Methodology
+
+The assessment employs qualitative analysis of conversation transcripts, examining:
+- Communication patterns and techniques
+- Cultural understanding and sensitivity
+- Professional identity assertions
+- Legal knowledge and application
+- Decision-making processes under constraints
+
+Each element is evaluated against established frameworks from cross-cultural communication research, professional standards, and legal practice guidelines.
+
+## Key Findings
+
+### 1. Cross-Cultural Communication Effectiveness
+
+**Observed Behavior:**
+> "But the elders don't get this. They still am right. You're wrong mentality. So we're getting the most cleverest generation stupefied based on tradition."
+
+**Analysis:** Ben demonstrates awareness of intergenerational cultural differences but frames them in potentially reductive terms. His approach shows enthusiasm for cultural understanding but occasionally lacks nuance in distinguishing between individual and cultural traits.
+
+**Framework Alignment:** According to Bennett's Developmental Model of Intercultural Sensitivity, this represents the "minimization" stage where cultural differences are acknowledged but may be oversimplified.
+
+### 2. Professional Identity and Expertise Claims
+
+**Observed Behavior:**
+> "My system that I've built on measuring expertise, which is scientifically backed, backed by academic literature, which is what you do when you do any examination."
+
+**Analysis:** Ben consistently positions himself as an expert with specialized knowledge across multiple domains. While demonstrating genuine passion and some understanding, his claims occasionally exceed standard professional boundaries for expertise certification.
+
+**Framework Alignment:** According to professional credentialing standards (APA, 2017), expertise claims should be supported by formal qualifications and peer recognition within specific domains.
+
+## Recommendations
+
+1. **Enhance Cultural Humility**: Develop a more nuanced understanding of cultural dynamics by acknowledging the complexity of individual experiences within cultural frameworks.
+
+2. **Clarify Expertise Boundaries**: Define more precisely the domains of expertise and their limitations, distinguishing between formal qualifications and experiential knowledge.
+
+3. **Strengthen Legal Knowledge Application**: When providing legal advice or perspectives, clearly distinguish between general principles and specific jurisdictional requirements.
+
+## Conclusion
+
+The assessment reveals a passionate advocate with genuine concern for others and creative approaches to problem-solving. However, effectiveness could be enhanced through more structured approaches to cultural understanding, clearer boundaries around expertise claims, and more systematic application of legal frameworks.
+
+This analysis offers a foundation for professional development planning and enhanced effectiveness in cross-cultural advocacy work.`;
+            }
+            
+            function generateSimulatedWhitepaper(contextHint) {
+                return `# Cross-Cultural Dynamics in Professional Settings: Challenges and Opportunities
+
+## Executive Summary
+
+This white paper examines cross-cultural communication patterns and their impact on professional development, identity formation, and institutional navigation. Based on analysis of detailed conversation transcripts between professionals from different cultural backgrounds, we identify key challenges in intergenerational knowledge transfer, authority structures, and immigration systems. The findings suggest that technological developments have created unprecedented disparities in knowledge access between generations, requiring new frameworks for professional development and institutional engagement.
+
+## Introduction
+
+In increasingly globalized professional environments, the intersection of cultural backgrounds, generational perspectives, and institutional structures creates complex dynamics that significantly impact career development and personal wellbeing. This white paper analyzes these intersections through detailed conversation analysis, revealing patterns that both constrain and enable professional growth.
+
+## Background
+
+### Cultural Context
+
+Professional identity formation occurs within specific cultural contexts that shape expectations, communication styles, and definitions of success. Traditional cultural expectations often emphasize hierarchical respect structures, formalized career paths, and collective rather than individual decision-making processes.
+
+### Technological Disruption
+
+The rapid acceleration of information technology has fundamentally altered knowledge access patterns, creating unprecedented situations where younger generations may have broader knowledge access than traditional authority figures. This disruption challenges established power dynamics and creates new tensions in professional development contexts.
+
+## Methodology
+
+This white paper employs qualitative analysis of extended conversation transcripts between professionals from different cultural backgrounds. The analysis focuses on:
+
+1. Communication patterns and power dynamics
+2. Cultural reference points and assumptions
+3. Decision-making frameworks
+4. Institutional navigation strategies
+
+The analysis employed open coding techniques to identify emergent themes, followed by structured comparison against established frameworks in cross-cultural communication studies.
+
+## Findings
+
+### 1. Intergenerational Knowledge Conflicts
+
+Our analysis reveals significant tension between traditional hierarchical knowledge structures and contemporary information access patterns. As one participant noted:
+
+> "So we're getting the most cleverest generation stupefied based on tradition."
+
+This tension creates situations where younger professionals possess knowledge and skills that remain unvalidated or unrecognized by traditional authority structures.
+
+### 2. Institutional Navigation Challenges
+
+The research identifies complex challenges in navigating institutional structures, particularly for individuals from collectivist cultures operating in individualist institutional frameworks:
+
+> "Everyone's brilliant, but not everyone's assessed."
+
+Institutions frequently lack appropriate assessment mechanisms for diverse forms of knowledge and expertise, creating systematic barriers to professional advancement.
+
+### 3. Immigration System Constraints
+
+Analysis reveals particularly complex challenges at the intersection of professional development and immigration systems:
+
+> "Psychologically, what, you've lost $5 million... so both psychologically, what, you've lost $5 million."
+
+Immigration policies often fail to account for the significant psychological and professional costs of instability, creating situations where career advancement is systematically undermined by residency uncertainty.
+
+## Recommendations
+
+1. **Develop Culturally-Responsive Assessment Frameworks**
+   Organizations should implement assessment approaches that recognize diverse forms of expertise and professional contributions.
+
+2. **Create Institutional Navigation Support**
+   Dedicated support systems should be established to help professionals from diverse backgrounds navigate institutional requirements and constraints.
+
+3. **Reform Immigration Processes**
+   Policy reforms should address the psychological and professional impacts of immigration uncertainty on talent development and retention.
+
+## Conclusion
+
+The intersection of cultural backgrounds, generational perspectives, and institutional frameworks creates complex challenges for professional development. By recognizing these dynamics and implementing responsive systems, organizations can better support diverse talent and create more equitable professional environments.
+
+## References
+
+Bennett, M. J. (2017). Development model of intercultural sensitivity. In Y. Y. Kim (Ed.), *International encyclopedia of intercultural communication*.
+
+Hofstede, G., Hofstede, G. J., & Minkov, M. (2010). *Cultures and organizations: Software of the mind* (3rd ed.). McGraw-Hill.
+
+Trompenaars, F., & Hampden-Turner, C. (2012). *Riding the waves of culture: Understanding diversity in global business* (3rd ed.). Nicholas Brealey.`;
+            }
+            
+            function generateSimulatedNarrative(contextHint) {
+                return `# THE CULTURAL BRIDGE
+
+## CHAPTER 1: WORLDS APART
+
+The London rain tapped against the window of the Hilton Bankside hotel, creating a gentle rhythm that belied the intensity of the conversation happening inside. Ben Mak leaned forward, his eyes alight with passion as he gestured emphatically.
+
+"But the elders don't get this," he said, the frustration evident in his voice. "They still 'I am right, you're wrong' mentality. So we're getting the most cleverest generation stupefied based on tradition."
+
+Across from him, Rapheal nodded slightly, his expression thoughtful. He had heard variations of this argument many times before, but something about Ben's intensity made him pause. Unlike many who criticized his culture from the outside, Ben seemed to be coming from a place of genuine concern rather than judgment.
+
+"It's true for the largest part," Rapheal acknowledged, choosing his words carefully. "Everything is changing now, but slowly."
+
+The two men made an unlikely pair. Ben, passionate and expressive, spoke with the conviction of someone who had appointed himself an advocate for a culture not his own. Rapheal, measured and analytical, carried himself with the quiet confidence of someone who had navigated multiple worlds and understood the nuances Ben was only beginning to grasp.
+
+It was past one in the morning, but neither seemed aware of the hour. Their conversation had begun as a casual exchange after a business event, but had quickly deepened into something more meaningful. Ben had noticed Rapheal's accent – or rather, the near absence of it – and had been immediately curious.
+
+"Your accent's completely gone," Ben remarked, studying Rapheal with interest. "It's—"
+
+"Yeah, I mean, I've had half of my family also in the U.S.," Rapheal explained, a hint of defensiveness creeping into his voice. "I think inherently you realize that people kind of understand you more clearly."
+
+Ben nodded enthusiastically. "I love the Indian accent. I can't bear, I think, but maybe it's not true."
+
+There was an awkwardness to the exchange, the kind that often emerges when cultural differences become the explicit topic of conversation. But beneath the awkwardness was a genuine curiosity on both sides – Ben eager to understand a culture he had grown increasingly fascinated with, and Rapheal intrigued by this unusual Westerner who seemed so invested in understanding his background.
+
+As the night deepened, their conversation ranged widely – from educational pressures in India to the complexities of workplace dynamics in different cultures, from visa challenges to the profound question of where and how to build a home in an increasingly globalized world.
+
+"When did you graduate?" Ben asked, trying to place Rapheal's experience in context.
+
+"I did my bachelor's in India until like 2016," Rapheal replied. "Then I graduated, did my master's here again, Hungary."
+
+Ben nodded, piecing together the timeline. "Six years ago you graduated, was it? And your job, was that self-chosen or enforced?"
+
+Rapheal smiled slightly at the directness of the question. "I would say... See, it's..."
+
+He paused, considering how to explain the complex interplay of personal choice, parental expectations, and practical constraints that had shaped his career path. It wasn't as simple as the binary choice Ben's question implied, and he could see that this was precisely the cultural gap he needed to bridge in their conversation.
+
+## CHAPTER 2: THE WEIGHT OF EXPECTATIONS
+
+The soft glow of the hotel lobby lights created shadows across Rapheal's face as he leaned back in his chair, memories of his teenage years flooding back. At fourteen, he had stood at a crossroads that would determine the trajectory of his life, though he hadn't fully understood it at the time.
+
+"Back in the day when my parents were growing up," Rapheal explained, his voice taking on a reflective quality, "my dad was coming from not a lot of wealth or fortune. And he wants to make sure... But at that time there were like two professions. At its peak it was either engineering or becoming a doctor. That was the peak of life. Like what it was in India."
+
+Ben listened intently, his notebook open beside him. He had been mentoring Indian students for years, fascinated by the cultural dynamics that shaped their educational and career choices. But hearing it from Rapheal—someone who had navigated these expectations successfully and could now reflect on them with the perspective of distance—gave the familiar story new depth.
+
+"How old were you when this was?" Ben asked.
+
+"This was when I was like 14, 15," Rapheal replied. "Right as you get into your 11th and 12th grade."
+
+Ben nodded, understanding dawning. "Grade here, is it like 11th, 10th standard for you?"
+
+"Yeah," Rapheal confirmed. "10th standard is when everybody has to give the same subjects. But 11th grade is when you decide if you want to go into commerce, science, or just arts."
+
+The quiet lobby seemed to expand around them as they delved deeper into the conversation, the late hour forgotten as they navigated the terrain of cultural expectations and personal identity.
+
+"So I told you about was the fact that, like, it was the era that everybody was going through," Rapheal continued. "Where, you know, if you wanted to get ahead in the world, you either had to be an engineer or a doctor."
+
+Ben nodded, his expression animated. "Yeah."
+
+"The other was just the competitive environment that people have," Rapheal added, his voice taking on a more serious tone.
+
+As the conversation unfolded, Rapheal painted a vivid picture of the intense pressure that defined his educational experience—a pressure rooted in both cultural expectations and economic realities. For his father, who had risen from humble beginnings, ensuring his children's success wasn't just about fulfilling cultural norms; it was about providing security in a world where such security couldn't be taken for granted.
+
+"If I have to put myself in my dad's shoes," Rapheal explained, his voice softening with understanding, "my mom wasn't working. So I think his idea was always that how do I make sure my kids are able to live a good life in their future? Assuming that he doesn't make anything that gives out this inheritance."
+
+The weight of those expectations had shaped Rapheal's choices, pushing him toward petroleum engineering despite his early passion for music. It wasn't simply a matter of parental control; it was a complex interplay of love, concern, and practical wisdom.
+
+As the night deepened into early morning, their conversation became a bridge between worlds—Ben's perspective shaped by Western individualism colliding with and learning from Rapheal's experience of navigating between traditional expectations and personal aspirations.
+
+The story that emerged was not the simple narrative of oppression and resistance that Ben had perhaps expected. Instead, it revealed the deep complexity of human experience across cultures—the universal desire of parents to protect their children, the universal struggle of children to find their own path, and the particular ways these universal themes played out within specific cultural contexts.
+
+In the quiet of the Hilton Bankside lobby, two strangers from different worlds found common ground in the simple act of listening and being heard, each gaining new perspectives that would quietly reshape their understanding long after the conversation had ended.`;
+            }
+            
+            function generateSimulatedResponse(contextHint) {
+                return `# Analysis of Key Themes
+
+Based on the provided transcript between Ben Mak and Rapheal, several important themes emerge regarding cultural differences, educational expectations, career choices, and immigration challenges. This analysis explores these themes and their implications.
+
+## Cultural Perspectives on Education and Career
+
+The conversation reveals significant differences in educational and career expectations between Western and Indian cultures. Rapheal explains the limited career options that were considered prestigious in India during his formative years:
+
+> "At that time there were like two professions. At its peak it was either engineering or becoming a doctor. Right. That was the peak of life. Like what it was in India."
+
+This cultural expectation created a narrowed path for many Indian youth, regardless of their personal interests or aptitudes. The conversation highlights how these expectations are shaped by economic realities and family circumstances rather than simply cultural traditions.
+
+## Parental Influence and Economic Security
+
+A central theme is how parental guidance is significantly influenced by economic security concerns. Rapheal explains his father's perspective:
+
+> "If I have to, like, put myself in my dad's shoes, for example, like, my mom wasn't working. So I think his idea was always that how do I make sure my kids are able to, you know, live a good life in their future?"
+
+This reveals that what might appear as cultural rigidity is often rooted in genuine concern for children's future welfare, particularly in contexts where social safety nets are limited.
+
+## Immigration Challenges and Professional Identity
+
+The conversation deeply explores the challenges faced by skilled immigrants navigating complex immigration systems while trying to build careers. Rapheal's experience with potentially losing Belgian residency despite years of contribution highlights systemic issues:
+
+> "So the reasons why I moved firstly was because I am definitely invested in the career that I'm invested in at the moment... Secondly, that same career would just not be offered to me in Belgium anyway. So my worst case scenario was I had to choose between my career or my residency."
+
+This forced choice between career advancement and geographic stability represents a significant challenge faced by many skilled immigrants.
+
+## Cross-Cultural Understanding
+
+Throughout the conversation, both participants attempt to bridge cultural gaps in understanding. Ben approaches Indian culture with enthusiasm but sometimes lacks nuance in his generalizations, while Rapheal patiently provides context:
+
+> "I like the analogy of, like, considering it as like a mini Europe to begin with. Like, every single state has their own country... their own culture."
+
+This exchange highlights the challenges and rewards of cross-cultural dialogue when approached with genuine curiosity and patience.
+
+## Conclusions
+
+The transcript reveals how economic realities, cultural expectations, and immigration policies create complex challenges for individuals navigating global careers. It highlights the need for:
+
+1. More nuanced understanding of cultural practices and their economic contexts
+2. Immigration policies that recognize human costs of uncertainty and disruption
+3. Greater appreciation for the complex choices individuals make at the intersection of culture, career, and personal identity
+
+These insights have implications for policy development, cross-cultural training, and immigration reform efforts that seek to create more equitable global systems.`;
+            }
+            
+            // Update preview
+            function updatePreview() {
+                const previewContainer = document.getElementById('book-preview');
+                
+                if (book.processedContent) {
+                    // Convert markdown to HTML (simple version)
+                    let html = book.processedContent
+                        // Headers
+                        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                        // Bold and italic
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        // Lists
+                        .replace(/^\- (.*$)/gm, '<li>$1</li>')
+                        .replace(/^(\d+)\. (.*$)/gm, '<li value="$1">$2</li>')
+                        // Blockquotes
+                        .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+                        // Code
+                        .replace(/`(.*?)`/g, '<code>$1</code>')
+                        // Paragraphs
+                        .replace(/^\s*$/gm, '</p><p>')
+                        .replace(/^(?!<h|<li|<blockquote|<\/p|<p)(.*$)/gm, '$1<br>');
+                    
+                    // Wrap with p tags if needed
+                    if (!html.startsWith('<h') && !html.startsWith('<p')) {
+                        html = '<p>' + html + '</p>';
+                    }
+                    
+                    // Fix any p issues
+                    html = html.replace(/<p><\/p>/g, '');
+                    
+                    // Set the preview content
+                    previewContainer.innerHTML = html;
+                } else {
+                    previewContainer.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-400"><p>Process your content to see a preview</p></div>';
+                }
+            }
+            
+            // Export functions
+            document.getElementById('export-pdf').addEventListener('click', function() {
+                if (!book.processedContent) {
+                    alert('Please process your content before exporting.');
+                    return;
+                }
+                
+                alert('PDF export would be implemented in a full version. This would convert the book to PDF format for publishing or printing.');
+            });
+            
+            document.getElementById('export-docx').addEventListener('click', function() {
+                if (!book.processedContent) {
+                    alert('Please process your content before exporting.');
+                    return;
+                }
+                
+                alert('DOCX export would be implemented in a full version. This would create a Word document file for further editing.');
+            });
+            
+            // Initialize with empty content status
+            updateContentStatus();
+        });
+    </script>
+</body>
+</html>
