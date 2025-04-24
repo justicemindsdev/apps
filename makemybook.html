@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Bookmaking App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .dark {
+            --bg-primary: #181818;
+            --text-primary: #ffffff;
+            --accent-color: #7170FF;
+            --border-color: #333333;
+            --card-bg: #222222;
+            --input-bg: #2a2a2a;
+        }
+        
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #333333;
+            --accent-color: #5D5CDE;
+            --border-color: #e5e5e5;
+            --card-bg: #f9f9f9;
+            --input-bg: #f0f0f0;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        
+        input, textarea, select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        button.primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .sidebar {
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+        
+        .content-area {
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+        
+        .image-placeholder {
+            border: 2px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+        }
+        
+        #book-preview {
+            min-height: 500px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        /* Editor content styling */
+        .editor-content h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .editor-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .editor-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .editor-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .editor-content ul, .editor-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content ul {
+            list-style-type: disc;
+        }
+        
+        .editor-content ol {
+            list-style-type: decimal;
+        }
+        
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+            margin-left: 0;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content code {
+            font-family: monospace;
+            background-color: var(--input-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        
+        .editor-content pre {
+            background-color: var(--input-bg);
+            padding: 1rem;
+            border-radius: 0.25rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
+        }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Table of contents styling */
+        .toc-item {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        
+        .toc-item:hover {
+            background-color: var(--input-bg);
+        }
+        
+        .toc-item.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        /* Image gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: transform 0.2s;
+        }
+        
+        .gallery-image:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Expert Bookmaking App</h1>
+            <div class="flex items-center space-x-4">
+                <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-opacity-20 hover:bg-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <div class="sidebar w-full md:w-1/4 p-4 card rounded-lg mb-4 md:mb-0 md:mr-4">
+            <h2 class="text-xl font-bold mb-4">Book Structure</h2>
+            
+            <!-- Book Info -->
+            <div class="mb-6">
+                <label class="block mb-2">Book Title</label>
+                <input type="text" id="book-title" class="w-full px-3 py-2 rounded" placeholder="Enter book title">
+                
+                <label class="block mt-4 mb-2">Author</label>
+                <input type="text" id="book-author" class="w-full px-3 py-2 rounded" placeholder="Enter author name">
+                
+                <label class="block mt-4 mb-2">Description</label>
+                <textarea id="book-description" class="w-full px-3 py-2 rounded" rows="3" placeholder="Brief description of your book"></textarea>
+            </div>
+            
+            <!-- Table of Contents -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold">Table of Contents</h3>
+                    <button id="add-chapter-btn" class="text-sm px-2 py-1 rounded primary">+ Chapter</button>
+                </div>
+                <div id="table-of-contents" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Chapters will be added here -->
+                </div>
+            </div>
+            
+            <!-- AI Model Selection -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2">AI Assistant</h3>
+                <select id="ai-model" class="w-full px-3 py-2 rounded">
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="openai/chatgpt-4o-latest">GPT-4o</option>
+                    <option value="openai/o1-preview-2024-09-12">OpenAI o1</option>
+                    <option value="openai/o1-mini">OpenAI o1-mini</option>
+                    <option value="x-ai/grok-beta">Grok Beta</option>
+                </select>
+                <div class="mt-4">
+                    <label class="block mb-2">API Key</label>
+                    <input type="password" id="api-key" class="w-full px-3 py-2 rounded" 
+                        value="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" 
+                        placeholder="Enter OpenRouter API Key">
+                </div>
+            </div>
+            
+            <!-- Export Options -->
+            <div>
+                <h3 class="font-bold mb-2">Export Options</h3>
+                <div class="space-y-2">
+                    <button id="export-pdf" class="w-full py-2 px-4 rounded primary">Export as PDF</button>
+                    <button id="export-epub" class="w-full py-2 px-4 rounded secondary">Export as EPUB</button>
+                    <button id="export-markdown" class="w-full py-2 px-4 rounded secondary">Export as Markdown</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="content-area w-full md:w-3/4 flex flex-col">
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-200 flex">
+                <button id="tab-editor" class="py-2 px-4 border-b-2 border-accent-color text-accent-color font-medium">Editor</button>
+                <button id="tab-preview" class="py-2 px-4 text-gray-500 font-medium">Preview</button>
+                <button id="tab-images" class="py-2 px-4 text-gray-500 font-medium">Images</button>
+                <button id="tab-ai" class="py-2 px-4 text-gray-500 font-medium">AI Assistant</button>
+            </div>
+            
+            <!-- Editor Tab -->
+            <div id="editor-panel" class="panel active">
+                <div class="flex mb-4">
+                    <input type="text" id="chapter-title" class="flex-grow px-3 py-2 rounded-l" placeholder="Chapter Title">
+                    <button id="save-chapter" class="px-4 py-2 rounded-r primary">Save Chapter</button>
+                </div>
+                
+                <div class="card rounded-lg p-4 mb-4">
+                    <div class="toolbar flex flex-wrap gap-2 mb-4">
+                        <button class="format-btn px-3 py-1 rounded" data-format="h1">H1</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="h2">H2</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="h3">H3</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="bold">B</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="italic">I</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="ul">• List</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="ol">1. List</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="quote">Quote</button>
+                        <button class="format-btn px-3 py-1 rounded" data-format="code">Code</button>
+                        <button id="add-image-btn" class="px-3 py-1 rounded">Add Image</button>
+                        <input type="file" id="image-upload" accept="image/*" class="hidden">
+                    </div>
+                    
+                    <textarea id="chapter-content" class="w-full h-96 px-3 py-2 rounded font-mono" placeholder="Write your chapter content here..."></textarea>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button id="ai-continue" class="px-4 py-2 rounded primary flex items-center">
+                        <span>Continue with AI</span>
+                        <span id="ai-loading" class="ml-2 hidden">
+                            <div class="loading-indicator"></div>
+                        </span>
+                    </button>
+                    <button id="ai-suggest" class="px-4 py-2 rounded secondary">Suggest Improvements</button>
+                </div>
+            </div>
+            
+            <!-- Preview Tab -->
+            <div id="preview-panel" class="panel hidden">
+                <div class="card rounded-lg p-6">
+                    <div id="book-preview" class="editor-content">
+                        <!-- Preview content will appear here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Images Tab -->
+            <div id="images-panel" class="panel hidden">
+                <div class="flex mb-4">
+                    <input type="text" id="image-prompt" class="flex-grow px-3 py-2 rounded-l" placeholder="Describe the image you want to generate...">
+                    <button id="generate-image" class="px-4 py-2 rounded-r primary">Generate</button>
+                </div>
+                
+                <div class="flex mb-4">
+                    <input type="file" id="gallery-upload" accept="image/*" class="hidden" multiple>
+                    <button id="upload-to-gallery" class="px-4 py-2 rounded secondary mr-2">Upload Images</button>
+                    <select id="image-style" class="flex-grow px-3 py-2 rounded">
+                        <option value="photorealistic">Photorealistic</option>
+                        <option value="illustration">Illustration</option>
+                        <option value="3d-render">3D Render</option>
+                        <option value="sketch">Sketch</option>
+                        <option value="watercolor">Watercolor</option>
+                    </select>
+                </div>
+                
+                <div class="card rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Image Gallery</h3>
+                    <div class="image-placeholder mb-4 hidden" id="generated-image-container">
+                        <img id="generated-image" class="max-w-full max-h-64">
+                    </div>
+                    <div id="image-gallery" class="image-gallery">
+                        <!-- Images will be added here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Assistant Tab -->
+            <div id="ai-panel" class="panel hidden">
+                <div class="card rounded-lg p-4 mb-4">
+                    <h3 class="text-lg font-medium mb-2">AI Assistant</h3>
+                    <div class="mb-4">
+                        <select id="ai-task" class="w-full px-3 py-2 rounded mb-4">
+                            <option value="continue">Continue Writing</option>
+                            <option value="improve">Improve Writing</option>
+                            <option value="summarize">Summarize</option>
+                            <option value="research">Research Topic</option>
+                            <option value="characters">Develop Characters</option>
+                            <option value="plot">Plot Development</option>
+                            <option value="outline">Create Chapter Outline</option>
+                        </select>
+                        
+                        <textarea id="ai-prompt" class="w-full h-32 px-3 py-2 rounded" placeholder="Provide additional instructions or context for the AI..."></textarea>
+                    </div>
+                    
+                    <button id="run-ai-task" class="px-4 py-2 rounded primary flex items-center">
+                        <span>Run Task</span>
+                        <span id="ai-task-loading" class="ml-2 hidden">
+                            <div class="loading-indicator"></div>
+                        </span>
+                    </button>
+                </div>
+                
+                <div class="card rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-2">AI Response</h3>
+                    <div id="ai-response" class="h-64 overflow-y-auto p-2 border rounded editor-content">
+                        <!-- AI responses will appear here -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="apply-ai-response" class="px-4 py-2 rounded primary">Apply to Chapter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for dark mode preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Dark mode toggle
+            document.getElementById('dark-mode-toggle').addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+            });
+            
+            // Dark mode media query listener
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+            
+            // Tab switching
+            const tabs = ['editor', 'preview', 'images', 'ai'];
+            tabs.forEach(tab => {
+                document.getElementById(`tab-${tab}`).addEventListener('click', function() {
+                    // Hide all panels
+                    document.querySelectorAll('.panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                    
+                    // Show the selected panel
+                    document.getElementById(`${tab}-panel`).classList.remove('hidden');
+                    
+                    // Update tab styles
+                    tabs.forEach(t => {
+                        const tabEl = document.getElementById(`tab-${t}`);
+                        if (t === tab) {
+                            tabEl.classList.add('border-b-2', 'border-accent-color', 'text-accent-color');
+                            tabEl.classList.remove('text-gray-500');
+                        } else {
+                            tabEl.classList.remove('border-b-2', 'border-accent-color', 'text-accent-color');
+                            tabEl.classList.add('text-gray-500');
+                        }
+                    });
+                    
+                    // Special behavior for preview tab
+                    if (tab === 'preview') {
+                        updatePreview();
+                    }
+                });
+            });
+            
+            // Book data structure
+            let book = {
+                title: '',
+                author: '',
+                description: '',
+                chapters: [],
+                images: [],
+                currentChapterIndex: -1
+            };
+            
+            // Initialize with sample chapter
+            function initializeBook() {
+                book.title = 'My New Book';
+                book.author = 'Author Name';
+                book.description = 'A fascinating journey through...';
+                
+                // Add a sample chapter
+                book.chapters.push({
+                    id: Date.now(),
+                    title: 'Chapter 1: Introduction',
+                    content: 'Start writing your book here...'
+                });
+                
+                book.currentChapterIndex = 0;
+                
+                // Update UI
+                updateBookInfo();
+                updateTableOfContents();
+                loadCurrentChapter();
+            }
+            
+            // Update book info in the sidebar
+            function updateBookInfo() {
+                document.getElementById('book-title').value = book.title;
+                document.getElementById('book-author').value = book.author;
+                document.getElementById('book-description').value = book.description;
+            }
+            
+            // Update table of contents
+            function updateTableOfContents() {
+                const tocContainer = document.getElementById('table-of-contents');
+                tocContainer.innerHTML = '';
+                
+                book.chapters.forEach((chapter, index) => {
+                    const chapterElement = document.createElement('div');
+                    chapterElement.className = 'toc-item flex justify-between items-center';
+                    if (index === book.currentChapterIndex) {
+                        chapterElement.classList.add('active');
+                    }
+                    
+                    chapterElement.innerHTML = `
+                        <span>${chapter.title}</span>
+                        <div>
+                            <button class="move-up p-1" data-index="${index}" title="Move Up">↑</button>
+                            <button class="move-down p-1" data-index="${index}" title="Move Down">↓</button>
+                            <button class="delete-chapter p-1 text-red-500" data-index="${index}" title="Delete">×</button>
+                        </div>
+                    `;
+                    
+                    chapterElement.addEventListener('click', function(e) {
+                        if (e.target.tagName !== 'BUTTON') {
+                            book.currentChapterIndex = index;
+                            loadCurrentChapter();
+                            updateTableOfContents();
+                        }
+                    });
+                    
+                    tocContainer.appendChild(chapterElement);
+                });
+                
+                // Add event listeners for chapter management
+                document.querySelectorAll('.move-up').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(btn.dataset.index);
+                        if (index > 0) {
+                            const temp = book.chapters[index];
+                            book.chapters[index] = book.chapters[index-1];
+                            book.chapters[index-1] = temp;
+                            
+                            if (book.currentChapterIndex === index) {
+                                book.currentChapterIndex--;
+                            } else if (book.currentChapterIndex === index-1) {
+                                book.currentChapterIndex++;
+                            }
+                            
+                            updateTableOfContents();
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.move-down').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(btn.dataset.index);
+                        if (index < book.chapters.length - 1) {
+                            const temp = book.chapters[index];
+                            book.chapters[index] = book.chapters[index+1];
+                            book.chapters[index+1] = temp;
+                            
+                            if (book.currentChapterIndex === index) {
+                                book.currentChapterIndex++;
+                            } else if (book.currentChapterIndex === index+1) {
+                                book.currentChapterIndex--;
+                            }
+                            
+                            updateTableOfContents();
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.delete-chapter').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(btn.dataset.index);
+                        
+                        if (confirm(`Are you sure you want to delete "${book.chapters[index].title}"?`)) {
+                            book.chapters.splice(index, 1);
+                            
+                            if (book.currentChapterIndex >= book.chapters.length) {
+                                book.currentChapterIndex = book.chapters.length - 1;
+                            }
+                            
+                            if (book.chapters.length === 0) {
+                                book.chapters.push({
+                                    id: Date.now(),
+                                    title: 'New Chapter',
+                                    content: ''
+                                });
+                                book.currentChapterIndex = 0;
+                            }
+                            
+                            updateTableOfContents();
+                            loadCurrentChapter();
+                        }
+                    });
+                });
+            }
+            
+            // Load current chapter into editor
+            function loadCurrentChapter() {
+                if (book.currentChapterIndex >= 0 && book.currentChapterIndex < book.chapters.length) {
+                    const chapter = book.chapters[book.currentChapterIndex];
+                    document.getElementById('chapter-title').value = chapter.title;
+                    document.getElementById('chapter-content').value = chapter.content;
+                }
+            }
+            
+            // Save current chapter
+            function saveCurrentChapter() {
+                if (book.currentChapterIndex >= 0) {
+                    const title = document.getElementById('chapter-title').value;
+                    const content = document.getElementById('chapter-content').value;
+                    
+                    book.chapters[book.currentChapterIndex].title = title;
+                    book.chapters[book.currentChapterIndex].content = content;
+                    
+                    updateTableOfContents();
+                }
+            }
+            
+            // Add a new chapter
+            document.getElementById('add-chapter-btn').addEventListener('click', function() {
+                saveCurrentChapter();
+                
+                const newChapter = {
+                    id: Date.now(),
+                    title: `Chapter ${book.chapters.length + 1}`,
+                    content: ''
+                };
+                
+                book.chapters.push(newChapter);
+                book.currentChapterIndex = book.chapters.length - 1;
+                
+                updateTableOfContents();
+                loadCurrentChapter();
+            });
+            
+            // Save chapter button
+            document.getElementById('save-chapter').addEventListener('click', function() {
+                saveCurrentChapter();
+                alert('Chapter saved!');
+            });
+            
+            // Format buttons
+            document.querySelectorAll('.format-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const format = btn.dataset.format;
+                    const textarea = document.getElementById('chapter-content');
+                    const selStart = textarea.selectionStart;
+                    const selEnd = textarea.selectionEnd;
+                    const text = textarea.value;
+                    
+                    let newText = '';
+                    let newCursorPos = selStart;
+                    
+                    switch(format) {
+                        case 'h1':
+                            newText = text.substring(0, selStart) + '# ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 2;
+                            break;
+                        case 'h2':
+                            newText = text.substring(0, selStart) + '## ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 3;
+                            break;
+                        case 'h3':
+                            newText = text.substring(0, selStart) + '### ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 4;
+                            break;
+                        case 'bold':
+                            newText = text.substring(0, selStart) + '**' + text.substring(selStart, selEnd) + '**' + text.substring(selEnd);
+                            newCursorPos = selEnd + 4;
+                            break;
+                        case 'italic':
+                            newText = text.substring(0, selStart) + '*' + text.substring(selStart, selEnd) + '*' + text.substring(selEnd);
+                            newCursorPos = selEnd + 2;
+                            break;
+                        case 'ul':
+                            newText = text.substring(0, selStart) + '- ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 2;
+                            break;
+                        case 'ol':
+                            newText = text.substring(0, selStart) + '1. ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 3;
+                            break;
+                        case 'quote':
+                            newText = text.substring(0, selStart) + '> ' + text.substring(selStart, selEnd) + text.substring(selEnd);
+                            newCursorPos = selEnd + 2;
+                            break;
+                        case 'code':
+                            newText = text.substring(0, selStart) + '`' + text.substring(selStart, selEnd) + '`' + text.substring(selEnd);
+                            newCursorPos = selEnd + 2;
+                            break;
+                    }
+                    
+                    textarea.value = newText;
+                    textarea.focus();
+                    textarea.setSelectionRange(newCursorPos, newCursorPos);
+                });
+            });
+            
+            // Image button
+            document.getElementById('add-image-btn').addEventListener('click', function() {
+                document.getElementById('image-upload').click();
+            });
+            
+            // Image upload
+            document.getElementById('image-upload').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const imageUrl = event.target.result;
+                        
+                        // Add image to book data
+                        const imageId = Date.now();
+                        book.images.push({
+                            id: imageId,
+                            url: imageUrl,
+                            alt: file.name,
+                            description: 'Image upload: ' + file.name
+                        });
+                        
+                        // Insert markdown to the editor
+                        const textarea = document.getElementById('chapter-content');
+                        const selStart = textarea.selectionStart;
+                        const text = textarea.value;
+                        const imageMarkdown = `\n\n![${file.name}](image:${imageId})\n\n`;
+                        
+                        textarea.value = text.substring(0, selStart) + imageMarkdown + text.substring(selStart);
+                        textarea.focus();
+                        textarea.setSelectionRange(selStart + imageMarkdown.length, selStart + imageMarkdown.length);
+                        
+                        // Also add to image gallery
+                        updateImageGallery();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Upload to gallery
+            document.getElementById('upload-to-gallery').addEventListener('click', function() {
+                document.getElementById('gallery-upload').click();
+            });
+            
+            // Gallery upload
+            document.getElementById('gallery-upload').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const imageUrl = event.target.result;
+                            
+                            // Add image to book data
+                            book.images.push({
+                                id: Date.now() + Math.random().toString(36).substring(2, 8),
+                                url: imageUrl,
+                                alt: file.name,
+                                description: 'Gallery image: ' + file.name
+                            });
+                            
+                            // Update gallery
+                            updateImageGallery();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+            
+            // Update image gallery
+            function updateImageGallery() {
+                const gallery = document.getElementById('image-gallery');
+                gallery.innerHTML = '';
+                
+                book.images.forEach(image => {
+                    const imageElement = document.createElement('div');
+                    imageElement.className = 'gallery-item';
+                    
+                    imageElement.innerHTML = `
+                        <img src="${image.url}" alt="${image.alt}" class="gallery-image" data-id="${image.id}">
+                    `;
+                    
+                    imageElement.querySelector('img').addEventListener('click', function() {
+                        // Insert image into editor
+                        const textarea = document.getElementById('chapter-content');
+                        const selStart = textarea.selectionStart;
+                        const text = textarea.value;
+                        const imageMarkdown = `\n\n![${image.alt}](image:${image.id})\n\n`;
+                        
+                        textarea.value = text.substring(0, selStart) + imageMarkdown + text.substring(selStart);
+                        textarea.focus();
+                        textarea.setSelectionRange(selStart + imageMarkdown.length, selStart + imageMarkdown.length);
+                        
+                        // Switch to editor tab
+                        document.getElementById('tab-editor').click();
+                    });
+                    
+                    gallery.appendChild(imageElement);
+                });
+            }
+            
+            // Generate image
+            document.getElementById('generate-image').addEventListener('click', async function() {
+                const prompt = document.getElementById('image-prompt').value.trim();
+                const style = document.getElementById('image-style').value;
+                
+                if (!prompt) {
+                    alert('Please enter an image description!');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    document.getElementById('generate-image').innerHTML = '<div class="loading-indicator"></div> Generating...';
+                    document.getElementById('generate-image').disabled = true;
+                    
+                    // For now, we'll use a placeholder generation function
+                    // In a real app, this would call an API like DALL-E or Midjourney
+                    const imageUrl = await generateImageWithAI(prompt, style);
+                    
+                    // Add the generated image to the book
+                    const imageId = Date.now();
+                    book.images.push({
+                        id: imageId,
+                        url: imageUrl,
+                        alt: prompt,
+                        description: `AI generated: ${prompt} (${style})`
+                    });
+                    
+                    // Show the generated image
+                    document.getElementById('generated-image').src = imageUrl;
+                    document.getElementById('generated-image-container').classList.remove('hidden');
+                    
+                    // Update gallery
+                    updateImageGallery();
+                } catch (error) {
+                    alert('Error generating image: ' + error.message);
+                } finally {
+                    // Reset button
+                    document.getElementById('generate-image').innerHTML = 'Generate';
+                    document.getElementById('generate-image').disabled = false;
+                }
+            });
+            
+            // Placeholder image generation function
+            // In a real app, this would call an API like DALL-E or Midjourney
+            async function generateImageWithAI(prompt, style) {
+                // For demo purposes, we'll just return a placeholder image
+                const placeholderUrl = `https://picsum.photos/800/600?random=${Date.now()}`;
+                
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                return placeholderUrl;
+            }
+            
+            // Update preview
+            function updatePreview() {
+                const previewContainer = document.getElementById('book-preview');
+                
+                if (book.currentChapterIndex >= 0) {
+                    const chapter = book.chapters[book.currentChapterIndex];
+                    
+                    // Convert markdown to HTML (simple version)
+                    let html = chapter.content
+                        // Headers
+                        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                        // Bold and italic
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        // Lists
+                        .replace(/^\- (.*$)/gm, '<li>$1</li>')
+                        .replace(/^(\d+)\. (.*$)/gm, '<li value="$1">$2</li>')
+                        // Blockquotes
+                        .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+                        // Code
+                        .replace(/`(.*?)`/g, '<code>$1</code>')
+                        // Images
+                        .replace(/!\[(.*?)\]\(image:(\d+)(.*?)\)/g, (match, alt, id) => {
+                            const image = book.images.find(img => img.id.toString() === id);
+                            if (image) {
+                                return `<img src="${image.url}" alt="${alt}" class="preview-image">`;
+                            }
+                            return match;
+                        })
+                        // Paragraphs
+                        .replace(/^\s*$/gm, '</p><p>')
+                        .replace(/^(?!<h|<li|<blockquote|<\/p|<p|<img)(.*$)/gm, '$1<br>');
+                    
+                    // Wrap with p tags if needed
+                    if (!html.startsWith('<h') && !html.startsWith('<p')) {
+                        html = '<p>' + html + '</p>';
+                    }
+                    
+                    // Fix any p issues
+                    html = html.replace(/<p><\/p>/g, '');
+                    
+                    // Set the preview content
+                    previewContainer.innerHTML = `<h1 class="text-2xl font-bold mb-4">${chapter.title}</h1>${html}`;
+                }
+            }
+            
+            // Book info change event listeners
+            document.getElementById('book-title').addEventListener('change', function() {
+                book.title = this.value;
+            });
+            
+            document.getElementById('book-author').addEventListener('change', function() {
+                book.author = this.value;
+            });
+            
+            document.getElementById('book-description').addEventListener('change', function() {
+                book.description = this.value;
+            });
+            
+            // AI continue writing
+            document.getElementById('ai-continue').addEventListener('click', async function() {
+                if (book.currentChapterIndex < 0) return;
+                
+                const textarea = document.getElementById('chapter-content');
+                const content = textarea.value;
+                const title = document.getElementById('chapter-title').value;
+                
+                if (!content.trim()) {
+                    alert('Please write something before continuing with AI.');
+                    return;
+                }
+                
+                // Show loading state
+                document.getElementById('ai-loading').classList.remove('hidden');
+                document.getElementById('ai-continue').disabled = true;
+                
+                try {
+                    const aiResponse = await callAI({
+                        task: 'continue',
+                        title: title,
+                        content: content,
+                    });
+                    
+                    // Append AI response to current content
+                    textarea.value = content + '\n\n' + aiResponse;
+                    
+                    // Save the chapter
+                    saveCurrentChapter();
+                } catch (error) {
+                    alert('Error with AI continuation: ' + error.message);
+                } finally {
+                    // Reset button
+                    document.getElementById('ai-loading').classList.add('hidden');
+                    document.getElementById('ai-continue').disabled = false;
+                }
+            });
+            
+            // AI suggest improvements
+            document.getElementById('ai-suggest').addEventListener('click', function() {
+                if (book.currentChapterIndex < 0) return;
+                
+                const content = document.getElementById('chapter-content').value;
+                const title = document.getElementById('chapter-title').value;
+                
+                if (!content.trim()) {
+                    alert('Please write something before asking for suggestions.');
+                    return;
+                }
+                
+                // Switch to AI tab
+                document.getElementById('tab-ai').click();
+                
+                // Set up for improvements
+                document.getElementById('ai-task').value = 'improve';
+                document.getElementById('ai-prompt').value = `Please suggest improvements for my chapter titled "${title}". Focus on clarity, engagement, and flow.`;
+                
+                // Run the task automatically
+                document.getElementById('run-ai-task').click();
+            });
+            
+            // Run AI task
+            document.getElementById('run-ai-task').addEventListener('click', async function() {
+                if (book.currentChapterIndex < 0) return;
+                
+                const task = document.getElementById('ai-task').value;
+                const prompt = document.getElementById('ai-prompt').value;
+                const content = document.getElementById('chapter-content').value;
+                const title = document.getElementById('chapter-title').value;
+                
+                // Show loading state
+                document.getElementById('ai-task-loading').classList.remove('hidden');
+                document.getElementById('run-ai-task').disabled = true;
+                
+                try {
+                    const aiResponse = await callAI({
+                        task: task,
+                        title: title,
+                        content: content,
+                        prompt: prompt
+                    });
+                    
+                    // Display AI response
+                    document.getElementById('ai-response').innerHTML = aiResponse.replace(/\n/g, '<br>');
+                } catch (error) {
+                    document.getElementById('ai-response').innerHTML = 'Error: ' + error.message;
+                } finally {
+                    // Reset button
+                    document.getElementById('ai-task-loading').classList.add('hidden');
+                    document.getElementById('run-ai-task').disabled = false;
+                }
+            });
+            
+            // Apply AI response
+            document.getElementById('apply-ai-response').addEventListener('click', function() {
+                const aiResponse = document.getElementById('ai-response').innerHTML
+                    .replace(/<br>/g, '\n')
+                    .replace(/<[^>]*>/g, '');
+                
+                // Switch to editor tab
+                document.getElementById('tab-editor').click();
+                
+                // Apply the response based on the task
+                const task = document.getElementById('ai-task').value;
+                const textarea = document.getElementById('chapter-content');
+                
+                if (task === 'continue') {
+                    // Append to existing content
+                    textarea.value += '\n\n' + aiResponse;
+                } else if (task === 'improve') {
+                    // Replace content if user confirms
+                    if (confirm('Replace current content with improved version?')) {
+                        textarea.value = aiResponse;
+                    }
+                } else if (task === 'outline') {
+                    // Append outline to existing content
+                    textarea.value += '\n\n## Chapter Outline\n\n' + aiResponse;
+                } else {
+                    // For other tasks, append with header
+                    textarea.value += '\n\n## ' + document.getElementById('ai-task').options[document.getElementById('ai-task').selectedIndex].text + '\n\n' + aiResponse;
+                }
+                
+                // Save the chapter
+                saveCurrentChapter();
+            });
+            
+            // Chunking function to handle large content
+            function chunkContent(content, maxChunkSize = 5000) {
+                if (content.length <= maxChunkSize) {
+                    return [content];
+                }
+                
+                const chunks = [];
+                let pos = 0;
+                
+                while (pos < content.length) {
+                    let endPos = pos + maxChunkSize;
+                    
+                    // Try to find a paragraph break
+                    if (endPos < content.length) {
+                        const paragraphBreak = content.lastIndexOf('\n\n', endPos);
+                        if (paragraphBreak > pos && paragraphBreak < endPos) {
+                            endPos = paragraphBreak;
+                        } else {
+                            // If no paragraph break, try to find a sentence break
+                            const sentenceBreak = content.lastIndexOf('. ', endPos);
+                            if (sentenceBreak > pos && sentenceBreak < endPos) {
+                                endPos = sentenceBreak + 1; // Include the period
+                            }
+                        }
+                    }
+                    
+                    chunks.push(content.substring(pos, endPos));
+                    pos = endPos;
+                }
+                
+                return chunks;
+            }
+            
+            // Function to call AI API
+            async function callAI(params) {
+                const { task, title, content, prompt = '' } = params;
+                const apiKey = document.getElementById('api-key').value;
+                const model = document.getElementById('ai-model').value;
+                
+                if (!apiKey) {
+                    throw new Error('Please enter an API key');
+                }
+                
+                // Prepare instructions based on task
+                let instructions = '';
+                switch (task) {
+                    case 'continue':
+                        instructions = `Continue writing the following chapter titled "${title}". Maintain the same style, tone, and narrative perspective. Add approximately 500-1000 words that logically follow from the existing content.`;
+                        break;
+                    case 'improve':
+                        instructions = `Improve the following chapter titled "${title}". Focus on enhancing clarity, engagement, flow, and overall quality. Preserve the core ideas and structure.`;
+                        break;
+                    case 'summarize':
+                        instructions = `Summarize the following chapter titled "${title}". Create a concise summary that captures the key points, themes, and developments.`;
+                        break;
+                    case 'research':
+                        instructions = `Research the topic of "${title}". Provide factual information, historical context, and relevant details that could enhance the chapter.`;
+                        break;
+                    case 'characters':
+                        instructions = `Develop characters for the following chapter titled "${title}". Suggest character traits, backgrounds, motivations, and how they could fit into the narrative.`;
+                        break;
+                    case 'plot':
+                        instructions = `Suggest plot developments for the following chapter titled "${title}". Provide ideas for narrative arcs, conflicts, resolutions, and turning points.`;
+                        break;
+                    case 'outline':
+                        instructions = `Create a detailed outline for the following chapter titled "${title}". Structure the outline with major sections, key points, and narrative progression.`;
+                        break;
+                    default:
+                        instructions = `Analyze the following chapter titled "${title}" and provide helpful feedback and suggestions.`;
+                }
+                
+                // Add user prompt if provided
+                if (prompt) {
+                    instructions += `\n\nAdditional instructions: ${prompt}`;
+                }
+                
+                // Handle chunking for large content
+                const chunks = chunkContent(content);
+                let fullResponse = '';
+                
+                // Process each chunk
+                for (let i = 0; i < chunks.length; i++) {
+                    const chunk = chunks[i];
+                    
+                    // Modify instructions for chunks
+                    let chunkInstructions = instructions;
+                    if (chunks.length > 1) {
+                        chunkInstructions = `${instructions}\n\nThis is part ${i+1} of ${chunks.length} of the chapter content.`;
+                        
+                        if (i > 0) {
+                            // For continuation chunks, adjust instructions
+                            chunkInstructions = `Continue processing the chapter titled "${title}". This is part ${i+1} of ${chunks.length}.`;
+                            
+                            if (i === chunks.length - 1) {
+                                // For the final chunk, ask for final response
+                                chunkInstructions += "\n\nNow that you've processed all parts of the content, provide your complete response.";
+                            }
+                        }
+                    }
+                    
+                    // In a real app, this would use fetch to call an API
+                    // For this demo, we'll simulate API responses
+                    
+                    // Simulate API call
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Generate a simulated response
+                    let response;
+                    if (task === 'continue') {
+                        response = simulateAIContinuation(chunk, title);
+                    } else if (task === 'improve') {
+                        response = simulateAIImprovement(chunk, title);
+                    } else {
+                        response = simulateAIResponse(task, chunk, title);
+                    }
+                    
+                    // Accumulate responses
+                    if (task === 'continue' || (chunks.length > 1 && i === chunks.length - 1)) {
+                        fullResponse += response;
+                    } else {
+                        fullResponse = response; // For non-continuation tasks, just use the final response
+                    }
+                }
+                
+                return fullResponse;
+            }
+            
+            // Functions to simulate AI responses for demo purposes
+            function simulateAIContinuation(content, title) {
+                // Extract last few sentences for context
+                const lastParagraph = content.split('\n\n').pop() || '';
+                const lastSentences = lastParagraph.split(/\.\s+/).slice(-2).join('. ');
+                
+                // Simple continuation based on last content
+                if (lastSentences.includes('journey')) {
+                    return "\n\nThe journey continued through the dense forest, where shadows danced between ancient trees. Each step forward revealed new wonders and hidden dangers that tested their resolve. The air grew thick with anticipation as they approached the clearing ahead, where legends spoke of a sacred shrine untouched by time.\n\n'Do you feel that?' whispered Elena, her voice barely audible above the rustling leaves. 'The air here feels different.'\n\nMarcus nodded, his hand instinctively reaching for the worn leather pouch that hung around his neck. 'The old maps were right. We're close now.'";
+                } else if (lastSentences.includes('character') || lastSentences.includes('person')) {
+                    return "\n\nShe had never considered herself extraordinary—just someone trying to navigate life's complexities with whatever wisdom she could gather along the way. Her strength came not from some innate heroic quality, but from necessity and the quiet determination that had seen her through countless hardships.\n\n'You don't understand what you're capable of,' her mentor had once told her, eyes gleaming with a certainty she couldn't comprehend. 'Not yet.'\n\nThose words returned to her now as she faced the seemingly insurmountable challenge before her. Perhaps it was time to discover what had always resided within, waiting for this precise moment to emerge.";
+                } else {
+                    return "\n\nThe revelation changed everything we thought we understood. What once seemed like random coincidences now formed a clear pattern, pointing toward a truth that had been hidden in plain sight all along. The implications were staggering, threatening to upend conventional wisdom and redefine the boundaries of what we considered possible.\n\n'We need to verify this before proceeding,' said Dr. Harmon, her usual confidence temporarily shaken. 'If what we're seeing is accurate...'\n\nShe didn't need to finish the sentence. Everyone in the room understood the gravity of their discovery and the responsibility that now rested upon their shoulders. This wasn't just about scientific breakthrough—it was about the future of humanity itself.";
+                }
+            }
+            
+            function simulateAIImprovement(content, title) {
+                // Simulate improved version with added clarity and structure
+                const improvedContent = content.replace(/^/gm, '').trim();
+                
+                return `# ${title} (Improved Version)
+
+## Introduction
+${improvedContent.split('\n\n')[0]}
+
+## Key Developments
+${improvedContent.includes('\n\n') ? improvedContent.split('\n\n').slice(1, 3).join('\n\n') : 'I suggest expanding this section with more detailed events and character development. Consider adding sensory details and emotional reactions to make the narrative more engaging.'}
+
+## Conclusion
+${improvedContent.split('\n\n').pop()}
+
+## Suggested Improvements:
+
+1. **Enhanced Imagery**: I've added more sensory details to help readers visualize the scenes.
+2. **Tightened Dialogue**: The conversations now have clearer purpose and reveal character traits more effectively.
+3. **Improved Pacing**: I've balanced action, reflection, and dialogue to maintain reader engagement.
+4. **Strengthened Theme**: The central themes are now more consistently developed throughout the chapter.
+
+Consider incorporating these changes to enhance the overall impact of your chapter.`;
+            }
+            
+            function simulateAIResponse(task, content, title) {
+                switch (task) {
+                    case 'summarize':
+                        return `# Summary of "${title}"
+
+The chapter presents ${content.length > 500 ? 'a complex narrative' : 'a straightforward account'} focusing on ${content.includes('character') ? 'character development' : content.includes('journey') ? 'a physical and metaphorical journey' : 'key events and revelations'}. The main themes include ${content.includes('conflict') ? 'conflict resolution' : content.includes('discovery') ? 'discovery and enlightenment' : 'personal growth and challenge'}.
+
+Key points:
+- ${content.split('\n\n')[0].substring(0, 100)}...
+- ${content.includes('\n\n') ? content.split('\n\n')[1].substring(0, 100) + '...' : 'Further development of the initial scenario'}
+- ${content.split('\n\n').pop().substring(0, 100)}...
+
+This chapter effectively ${content.length > 1000 ? 'builds upon previous developments while setting the stage for future events' : 'introduces concepts that will likely be explored further'}.`;
+                        
+                    case 'research':
+                        return `# Research Notes on "${title}"
+
+## Historical Context
+The topics in this chapter relate to ${title.includes('journey') ? 'historical expeditions and exploration' : title.includes('conflict') ? 'significant historical conflicts' : 'cultural and societal developments'} that have shaped our understanding of ${content.includes('science') ? 'scientific progress' : content.includes('art') ? 'artistic movements' : 'human experience'}.
+
+## Factual Information
+- The earliest documented instance of similar events occurred in ${Math.floor(Math.random() * 500) + 1500}.
+- Notable figures who have contributed to this field include Dr. Elizabeth Harmon, Professor James Wei, and the pioneering work of the Ambrose Institute.
+- Recent studies from ${Math.floor(Math.random() * 10) + 2010} have shown that ${content.includes('discovery') ? 'discoveries of this nature often lead to paradigm shifts in multiple disciplines' : 'these phenomena occur with greater frequency than previously thought'}.
+
+## Suggested References
+1. "The Complete History of ${title.split(':')[0]}" by Margaret Atwell
+2. "Understanding the Implications of ${content.includes('discovery') ? 'Modern Discoveries' : 'Contemporary Developments'}" by R.J. Simmons
+3. The ${title.split(' ')[0]} Journal, Volume 23, Special Issue on ${content.split(' ').slice(0, 3).join(' ')}
+
+These resources should provide valuable context and additional details to enrich your chapter.`;
+                        
+                    case 'characters':
+                        return `# Character Development for "${title}"
+
+## Main Character: ${title.split(' ')[0] || 'Alex'}
+- **Background**: Born in a small ${content.includes('village') ? 'village' : 'coastal town'}, with a troubled yet formative childhood that shaped their current worldview.
+- **Motivation**: Seeks to ${content.includes('redemption') ? 'find redemption for past mistakes' : content.includes('discovery') ? 'discover hidden truths about their origins' : 'protect those they care about while pursuing personal growth'}.
+- **Key Traits**: Resilient, intuitive, and ${content.includes('conflict') ? 'conflicted about their role' : 'determined yet vulnerable'}.
+- **Arc**: Will journey from ${content.includes('fear') ? 'fear to courage' : content.includes('doubt') ? 'doubt to conviction' : 'uncertainty to purpose'} through the challenges faced.
+
+## Supporting Character: Morgan
+- **Relationship to Main Character**: ${content.includes('friend') ? 'Childhood friend turned trusted ally' : content.includes('mentor') ? 'Reluctant mentor with their own secretive past' : 'Complicated rival with shared goals but different methods'}.
+- **Contribution to Plot**: Provides crucial ${content.includes('knowledge') ? 'knowledge' : content.includes('support') ? 'emotional support' : 'resources and connections'} that the protagonist cannot access alone.
+- **Conflict Potential**: Their differing perspectives on ${content.includes('moral') ? 'moral choices' : content.includes('strategy') ? 'strategic approaches' : 'the meaning of success'} create compelling tension.
+
+## Antagonist: Director ${title.includes('dark') ? 'Blackwood' : 'Varen'}
+- **Motivation**: Believes they are ${content.includes('greater good') ? 'serving a greater good' : content.includes('revenge') ? 'entitled to revenge' : 'preserving necessary order'}, making them morally complex.
+- **Method**: Uses ${content.includes('manipulation') ? 'manipulation and psychological warfare' : content.includes('power') ? 'institutional power and influence' : 'technological advantages and secret knowledge'} to obstruct the protagonist.
+- **Weakness**: Their blind devotion to ${content.includes('cause') ? 'their cause' : content.includes('power') ? 'maintaining power' : 'proving their superiority'} creates exploitable vulnerabilities.
+
+These character dynamics should create rich interactions that drive both plot and thematic development throughout your narrative.`;
+                        
+                    case 'plot':
+                        return `# Plot Development for "${title}"
+
+## Current Situation Analysis
+Based on your chapter, the plot currently centers on ${content.includes('conflict') ? 'an emerging conflict' : content.includes('discovery') ? 'a significant discovery' : 'a personal transformation'} that has created ${content.includes('tension') ? 'tension between key characters' : content.includes('opportunity') ? 'new opportunities and challenges' : 'a situation requiring decisive action'}.
+
+## Suggested Plot Developments
+
+### Immediate Next Events
+1. **Unexpected Revelation**: ${content.includes('secret') ? 'A long-buried secret comes to light' : content.includes('betrayal') ? 'A trusted ally reveals their true motives' : 'A misunderstood piece of information changes everything'}, forcing the protagonist to reevaluate their approach.
+2. **Escalating Stakes**: The ${content.includes('conflict') ? 'conflict intensifies' : content.includes('journey') ? 'journey becomes more perilous' : 'situation deteriorates rapidly'} when ${content.includes('antagonist') ? 'the antagonist makes a bold move' : content.includes('nature') ? 'natural forces intervene' : 'unforeseen consequences emerge'}.
+
+### Mid-Term Developments
+1. **False Resolution**: A moment where it appears the central problem has been solved, only for a deeper, more complex issue to emerge.
+2. **Character Crucible**: Place your protagonist in a position where their core beliefs and values are directly challenged, forcing growth or revealing hidden aspects of their character.
+
+### Climactic Possibilities
+1. **Convergence**: All subplot threads converge in a single, high-stakes confrontation that tests everyone involved.
+2. **Sacrifice Play**: Present a situation where achieving the goal requires giving up something precious, creating powerful emotional resonance.
+3. **Moral Dilemma**: Force a choice between two equally valid but mutually exclusive paths, with no perfect answer.
+
+These developments would maintain narrative tension while providing meaningful character growth and thematic depth.`;
+                        
+                    case 'outline':
+                        return `# Detailed Outline for "${title}"
+
+## I. Opening Scene
+- Establish setting: ${content.includes('urban') ? 'bustling urban environment' : content.includes('nature') ? 'serene natural setting with underlying tension' : 'intimate personal space revealing character'}
+- Introduce protagonist's current state of mind
+- Plant seed of the central conflict/question
+
+## II. Inciting Incident
+- Disruption of status quo through ${content.includes('conflict') ? 'external conflict' : content.includes('discovery') ? 'unexpected discovery' : 'personal realization'}
+- Introduction of key supporting characters
+- Establishment of initial stakes
+
+## III. Rising Action
+- First attempts to address the central problem
+- Complications and obstacles emerge
+- Introduction of subplot elements that enhance the main narrative
+- Deepening of character relationships and motivations
+
+## IV. Midpoint Twist
+- Significant revelation or reversal that changes the protagonist's understanding
+- Raising of stakes and shifting of goals
+- Introduction of new urgency or deadline
+
+## V. Escalating Complications
+- Progressive challenges that test the protagonist's abilities and resolve
+- Exploration of thematic questions through concrete scenarios
+- Development of secondary character arcs that reflect or contrast with the main arc
+
+## VI. Darkest Moment
+- Point of maximum uncertainty or failure
+- Internal or external crisis that forces deep reflection
+- Apparent defeat or insurmountable obstacle
+
+## VII. Climactic Sequence
+- Protagonist implements new approach based on what they've learned
+- Final confrontation with antagonistic forces
+- Resolution of central conflict through action and choice
+
+## VIII. Resolution
+- Immediate aftermath of the climax
+- Demonstration of character growth and change
+- Establishment of new status quo
+- Optional: Planting seeds for future developments
+
+This structure provides a clear narrative progression while allowing flexibility for creative development within each section.`;
+                        
+                    default:
+                        return `I've analyzed your chapter titled "${title}" and have several observations and suggestions:
+
+1. **Strengths**: Your writing shows ${content.length > 1000 ? 'depth and attention to detail' : 'promising elements that could be expanded'}. The ${content.includes('dialogue') ? 'dialogue feels authentic' : content.includes('description') ? 'descriptive passages are evocative' : 'narrative voice is consistent'}.
+
+2. **Areas for Development**: Consider ${content.includes('character') ? 'deepening character motivations' : content.includes('plot') ? 'strengthening the cause-and-effect relationships in your plot' : 'adding more sensory details to immerse readers'}. There are opportunities to ${content.length < 500 ? 'expand key scenes' : 'tighten certain passages for better pacing'}.
+
+3. **Reader Engagement**: The most compelling elements are ${content.includes('conflict') ? 'the central conflicts' : content.includes('world') ? 'your worldbuilding details' : 'the emotional undercurrents'}. Consider amplifying these aspects while ensuring they serve the overall narrative.
+
+4. **Next Steps**: I'd recommend focusing on ${content.includes('beginning') ? 'strengthening your opening hook' : content.includes('ending') ? 'creating a more impactful conclusion' : 'developing the middle section where the tension seems to waver slightly'}.
+
+I hope these insights help you refine your work. Remember that all suggestions should be considered in light of your creative vision for the piece.`;
+                }
+            }
+            
+            // Export functions
+            document.getElementById('export-pdf').addEventListener('click', function() {
+                alert('PDF export would be implemented in a full version. This would convert the book to PDF format for publishing or printing.');
+            });
+            
+            document.getElementById('export-epub').addEventListener('click', function() {
+                alert('EPUB export would be implemented in a full version. This would create an e-book file compatible with most e-readers.');
+            });
+            
+            document.getElementById('export-markdown').addEventListener('click', function() {
+                // Create markdown content
+                let markdown = `# ${book.title}\n\nBy ${book.author}\n\n_${book.description}_\n\n`;
+                
+                book.chapters.forEach(chapter => {
+                    markdown += `# ${chapter.title}\n\n${chapter.content}\n\n`;
+                });
+                
+                // Create a blob and download link
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${book.title.replace(/[^\w]/g, '_')}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+            
+            // Initialize the book
+            initializeBook();
+        });
+    </script>
+</body>
+</html>
